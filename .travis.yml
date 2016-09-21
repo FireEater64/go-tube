@@ -16,4 +16,4 @@ before_script:
   - go get -d ./...
 script:
   - go test -v ./... -bench=.
- - $HOME/gopath/bin/goveralls -service=travis-ci
+  - $HOME/gopath/bin/goveralls -service=travis-ci
