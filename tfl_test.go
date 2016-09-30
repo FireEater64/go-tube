@@ -9,8 +9,8 @@ var applicationID string
 var applicationKey string
 
 func TestMain(m *testing.M) {
-	applicationID = os.Getenv("applicationID")
-	applicationKey = os.Getenv("applicationKey")
+	applicationID = ""  //os.Getenv("applicationID")
+	applicationKey = "" //os.Getenv("applicationKey")
 	retCode := m.Run()
 	os.Exit(retCode)
 }
@@ -49,12 +49,13 @@ func TestTFLConstructor_getLineStatus_returnsNonEmptyArray(t *testing.T) {
 	}
 }
 
+// We should always be able to retrieve data for the bakerloo line
 func TestTFLConstructor_getLineStatusForSpecificLine_returnsNonEmptyString(t *testing.T) {
 	underTest := NewTFL(applicationID, applicationKey)
 
 	results, err := underTest.GetStatusForLine("bakerloo")
 
-	if err != nil || results == "" {
+	if err != nil || (*results)[0].SeverityDescription == "" {
 		t.Fatal("No line status information retrieved")
 		t.Fail()
 	}

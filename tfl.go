@@ -12,9 +12,10 @@ import (
 )
 
 const (
-	baseURL          string = "https://api.tfl.gov.uk"
-	stopPointSuffix  string = "/Stoppoint/Search/"
-	lineStatusSuffix string = "Line/Mode/tube,dlr,overground,tflrail/Status/"
+	baseURL                string = "https://api.tfl.gov.uk"
+	stopPointSuffix        string = "/Stoppoint/Search/"
+	lineStatusSuffix       string = "Line/Mode/tube,dlr,overground,tflrail/Status/"
+	singleLineStatusSuffix string = "Line/%s/Status/"
 )
 
 // TFL is the main class used to access the TFL unified API
@@ -38,6 +39,9 @@ func NewTFL(applicationID string, applicationKey string) *TFL {
 	return &toReturn
 }
 
+// GetStatus returns a list of LineStatusResponse items - describing the
+// current status of each line on the network.
+// Uses the /Line/Mode/Status endpoint.
 func (tfl *TFL) GetStatus() *[]types.LineStatusResponse {
 	response := []types.LineStatusResponse{}
 	params := map[string]string{}
@@ -47,16 +51,18 @@ func (tfl *TFL) GetStatus() *[]types.LineStatusResponse {
 	return &response
 }
 
-func (tfl *TFL) GetStatusForLine(givenLineId string) (string, error) {
-	lineStatuses := tfl.GetStatus() // No method of being efficient in the API
+// GetStatusForLine returns a object representing the state of a given LineId.
+func (tfl *TFL) GetStatusForLine(givenLineID string) (*[]types.LineStatusItem, error) {
+	response := []types.LineStatusResponse{}
+	params := map[string]string{}
+	url := tfl.buildURL(fmt.Sprintf(singleLineStatusSuffix, givenLineID), &params)
+	tfl.getJSONResponse(url, &response)
 
-	for _, status := range *lineStatuses {
-		if status.ID == givenLineId && len(status.Statuses) != 0 {
-			return status.Statuses[0].SeverityDescription, nil // TODO: Should probably check all status items?
-		}
+	if len(response) == 1 { // We should have only got one response back
+		return &response[0].Statuses, nil
 	}
 
-	return "", errors.New("Could not find specified line in line status response")
+	return nil, errors.New("Could not find specified line in line status response")
 }
 
 // *****************************************************************************
